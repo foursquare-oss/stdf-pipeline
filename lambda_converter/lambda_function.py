@@ -70,7 +70,12 @@ def post_unrecognized_to_sns_and_warn(message, event):
     )
 
 
+def log_event(event):
+    print(event)
+
+
 def lambda_handler(event, context):
+    log_event(event)
     error_if_not_exactly_one_record(event)
     subject, message = get_subject_and_message(event)
 
