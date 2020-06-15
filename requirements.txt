@@ -1,0 +1,2 @@
+https://github.com/foursquare-oss/terraform_validate/archive/master.zip
+boto3

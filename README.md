@@ -1,2 +1,2 @@
-# stdf-pipeline
-STDF pipeline
+# stdf-alert-pipeline
+Standard alerting pipeline for stdf format
