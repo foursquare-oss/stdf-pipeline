@@ -331,13 +331,14 @@ class TestLambdaHandler(unittest.TestCase):
     def setUp(self):
         importlib.reload(lambda_function)
 
+    @unittest.mock.patch('lambda_converter.lambda_function.log_event')
     @unittest.mock.patch('lambda_converter.lambda_function.error_if_not_exactly_one_record')
     @unittest.mock.patch('lambda_converter.lambda_function.get_subject_and_message')
     @unittest.mock.patch('lambda_converter.lambda_function.post_stdf_string_to_sns')
     @unittest.mock.patch('lambda_converter.lambda_function.post_unrecognized_to_sns_and_warn')
     @unittest.mock.patch('lambda_converter.lambda_function.parse_metric_to_stdf')
     def test_handle_incoming_stdf(self, mock_parse_metric_to_stdf, mock_post_unrecognized_to_sns_and_warn, mock_post_stdf_string_to_sns,
-                                  mock_get_subject_and_message, mock_error_if_not_exactly_one_record):
+                                  mock_get_subject_and_message, mock_error_if_not_exactly_one_record, mock_log_event):
         # Arrange
         expected_message = '{"a": "b"}'
         expected_subject = 'stdfMessage'
@@ -382,19 +383,21 @@ class TestLambdaHandler(unittest.TestCase):
         lambda_function.lambda_handler(expected_event, expected_context)
 
         # Assert
+        mock_log_event.assert_called_once_with(expected_event)
         mock_error_if_not_exactly_one_record.assert_called_once_with(expected_event)
         mock_get_subject_and_message.assert_called_once_with(expected_event)
         mock_post_stdf_string_to_sns.assert_called_once_with(expected_message)
         mock_post_unrecognized_to_sns_and_warn.assert_not_called()
         mock_parse_metric_to_stdf.assert_not_called()
 
+    @unittest.mock.patch('lambda_converter.lambda_function.log_event')
     @unittest.mock.patch('lambda_converter.lambda_function.error_if_not_exactly_one_record')
     @unittest.mock.patch('lambda_converter.lambda_function.get_subject_and_message')
     @unittest.mock.patch('lambda_converter.lambda_function.post_stdf_string_to_sns')
     @unittest.mock.patch('lambda_converter.lambda_function.post_unrecognized_to_sns_and_warn')
     @unittest.mock.patch('lambda_converter.lambda_function.parse_metric_to_stdf')
     def test_handle_incoming_metric_alarm(self, mock_parse_metric_to_stdf, mock_post_unrecognized_to_sns_and_warn, mock_post_stdf_string_to_sns,
-                                  mock_get_subject_and_message, mock_error_if_not_exactly_one_record):
+                                  mock_get_subject_and_message, mock_error_if_not_exactly_one_record, mock_log_event):
         # Arrange
         expected_subject = 'ALARM: "Example alarm name" in EU - Ireland'
         expected_context = {}
@@ -441,19 +444,21 @@ class TestLambdaHandler(unittest.TestCase):
         lambda_function.lambda_handler(expected_event, expected_context)
 
         # Assert
+        mock_log_event.assert_called_once_with(expected_event)
         mock_error_if_not_exactly_one_record.assert_called_once_with(expected_event)
         mock_get_subject_and_message.assert_called_once_with(expected_event)
         mock_post_stdf_string_to_sns.assert_called_once_with(expected_stdf_message_string)
         mock_parse_metric_to_stdf.assert_called_once_with(expected_message_string)
         mock_post_unrecognized_to_sns_and_warn.assert_not_called()
 
+    @unittest.mock.patch('lambda_converter.lambda_function.log_event')
     @unittest.mock.patch('lambda_converter.lambda_function.error_if_not_exactly_one_record')
     @unittest.mock.patch('lambda_converter.lambda_function.get_subject_and_message')
     @unittest.mock.patch('lambda_converter.lambda_function.post_stdf_string_to_sns')
     @unittest.mock.patch('lambda_converter.lambda_function.post_unrecognized_to_sns_and_warn')
     @unittest.mock.patch('lambda_converter.lambda_function.parse_metric_to_stdf')
     def test_handle_incoming_unrecognized(self, mock_parse_metric_to_stdf, mock_post_unrecognized_to_sns_and_warn, mock_post_stdf_string_to_sns,
-                                          mock_get_subject_and_message, mock_error_if_not_exactly_one_record):
+                                          mock_get_subject_and_message, mock_error_if_not_exactly_one_record, mock_log_event):
         # Arrange
         expected_message = '{"a": "b"}'
         expected_subject = 'unrecognizedMessage'
@@ -498,6 +503,7 @@ class TestLambdaHandler(unittest.TestCase):
         lambda_function.lambda_handler(expected_event, expected_context)
 
         # Assert
+        mock_log_event.assert_called_once_with(expected_event)
         mock_error_if_not_exactly_one_record.assert_called_once_with(expected_event)
         mock_get_subject_and_message.assert_called_once_with(expected_event)
         mock_post_unrecognized_to_sns_and_warn.assert_called_once_with(expected_message, expected_event)
