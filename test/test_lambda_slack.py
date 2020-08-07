@@ -214,7 +214,7 @@ class TestPostToSlack(unittest.TestCase):
         mock_conn.getresponse.return_value.status = expected_status
 
         # Act
-        with self.assertRaises(Exception) as actual_exception_context:
+        with self.assertRaises(ValueError) as actual_exception_context:
             lambda_function.post_to_slack(expected_webhook, expected_slack_message)
 
         # Assert

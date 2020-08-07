@@ -148,7 +148,7 @@ def post_to_slack(webhook, slack_message):
     status = conn.getresponse().status
 
     if status != http.HTTPStatus.OK:
-        raise Exception(f"Request to slack returned an error {status}")
+        raise ValueError(f"Request to slack returned an error {status}")
 
 
 def lambda_handler(event, context):
