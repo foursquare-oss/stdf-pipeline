@@ -164,6 +164,8 @@ def lambda_handler(event, context):
     try:
         slack_message = format_stdf(message)
         post_to_slack(webhook, slack_message)
+        print("Message sent to Slack")
     except ValueError as error:
         fallback_slack_message = format_fallback(message, fallback_reason=str(error))
         post_to_slack(webhook, fallback_slack_message)
+        print("Message sent to Slack in fallback mode")
