@@ -149,6 +149,8 @@ def post_to_slack(webhook, slack_message):
 
     if status != http.HTTPStatus.OK:
         raise ValueError(f"Request to slack returned an error {status}")
+    else: 
+        print(f'Sucessfully sent message to Slack. Message: {dumped_message}')
 
 
 def lambda_handler(event, context):
@@ -164,8 +166,6 @@ def lambda_handler(event, context):
     try:
         slack_message = format_stdf(message)
         post_to_slack(webhook, slack_message)
-        print("Message sent to Slack")
     except ValueError as error:
         fallback_slack_message = format_fallback(message, fallback_reason=str(error))
         post_to_slack(webhook, fallback_slack_message)
-        print("Message sent to Slack in fallback mode")
