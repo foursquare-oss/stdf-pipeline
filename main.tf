@@ -44,6 +44,23 @@ data "aws_iam_policy_document" "incoming_sns_cross_account" {
       values = var.allowed_accounts
     }
   }
+
+  statement {
+    sid = "CloudWatchEventsToSNSTopic"
+    effect = "Allow"
+    principals {
+      type = "Service"
+      identifiers = [
+        "events.amazonaws.com"
+      ]
+    }
+    actions = [
+      "SNS:Publish"
+    ]
+    resources = [
+      aws_sns_topic.incoming.arn
+    ]
+  }
 }
 
 resource "aws_sns_topic_subscription" "incoming" {
