@@ -389,6 +389,65 @@ class TestLambdaHandler(unittest.TestCase):
         mock_post_stdf_string_to_sns.assert_called_once_with(expected_message)
         mock_post_unrecognized_to_sns_and_warn.assert_not_called()
         mock_parse_metric_to_stdf.assert_not_called()
+    
+    @unittest.mock.patch('lambda_converter.lambda_function.log_event')
+    @unittest.mock.patch('lambda_converter.lambda_function.error_if_not_exactly_one_record')
+    @unittest.mock.patch('lambda_converter.lambda_function.get_subject_and_message')
+    @unittest.mock.patch('lambda_converter.lambda_function.post_stdf_string_to_sns')
+    @unittest.mock.patch('lambda_converter.lambda_function.post_unrecognized_to_sns_and_warn')
+    @unittest.mock.patch('lambda_converter.lambda_function.parse_metric_to_stdf')
+    def test_handle_incoming_stdf_with_stdf_flag(self, mock_parse_metric_to_stdf, mock_post_unrecognized_to_sns_and_warn, mock_post_stdf_string_to_sns,
+                                  mock_get_subject_and_message, mock_error_if_not_exactly_one_record, mock_log_event):
+        # Arrange
+        expected_message = '{"a": "b",  "message_type": "stdfMessage" }'
+        expected_subject = None
+
+        expected_context = {}
+
+        expected_event = {
+            'Records': [
+                {
+                    'EventVersion': '1.0',
+                    'EventSubscriptionArn': 'arn:aws:sns:us-east-2:123456789012:sns-lambda:21be56ed-a058-49f5-8c98-aedd2564c486',
+                    'EventSource': 'aws:sns',
+                    'Sns': {
+                        'SignatureVersion': '1',
+                        'Timestamp': '2019-01-02T12:45:07.000Z',
+                        'Signature': 'tcc6faL2yUC6dgZdmrwh1Y4cGa/ebXEkAi6RibDsvpi+tE/1+82j...65r==',
+                        'SigningCertUrl': 'https://sns.us-east-2.amazonaws.com/SimpleNotificationService-ac565b8b1a6c5d002d285f9598aa1d9b.pem',
+                        'MessageId': '95df01b4-ee98-5cb9-9903-4c221d41eb5e',
+                        'Message': expected_message,
+                        'MessageAttributes': {
+                            'Test': {
+                                'Type': 'String',
+                                'Value': 'TestString'
+                            },
+                            'TestBinary': {
+                                'Type': 'Binary',
+                                'Value': 'TestBinary'
+                            }
+                        },
+                        'Type': 'Notification',
+                        'UnsubscribeUrl': 'https://sns.us-east-2.amazonaws.com/?Action=Unsubscribe&amp;SubscriptionArn=arn:aws:sns:us-east-2:123456789012:test-lambda:21be56ed-a058-49f5-8c98-aedd2564c486',
+                        'TopicArn': 'arn:aws:sns:us-east-2:123456789012:sns-lambda',
+                        'Subject': expected_subject
+                    }
+                }
+            ]
+        }
+
+        mock_get_subject_and_message.return_value = (expected_subject, expected_message)
+
+        # Act
+        lambda_function.lambda_handler(expected_event, expected_context)
+
+        # Assert
+        mock_log_event.assert_called_once_with(expected_event)
+        mock_error_if_not_exactly_one_record.assert_called_once_with(expected_event)
+        mock_get_subject_and_message.assert_called_once_with(expected_event)
+        mock_post_stdf_string_to_sns.assert_called_once_with(expected_message)
+        mock_post_unrecognized_to_sns_and_warn.assert_not_called()
+        mock_parse_metric_to_stdf.assert_not_called()
 
     @unittest.mock.patch('lambda_converter.lambda_function.log_event')
     @unittest.mock.patch('lambda_converter.lambda_function.error_if_not_exactly_one_record')
@@ -462,6 +521,124 @@ class TestLambdaHandler(unittest.TestCase):
         # Arrange
         expected_message = '{"a": "b"}'
         expected_subject = 'unrecognizedMessage'
+
+        expected_context = {}
+
+        expected_event = {
+            'Records': [
+                {
+                    'EventVersion': '1.0',
+                    'EventSubscriptionArn': 'arn:aws:sns:us-east-2:123456789012:sns-lambda:21be56ed-a058-49f5-8c98-aedd2564c486',
+                    'EventSource': 'aws:sns',
+                    'Sns': {
+                        'SignatureVersion': '1',
+                        'Timestamp': '2019-01-02T12:45:07.000Z',
+                        'Signature': 'tcc6faL2yUC6dgZdmrwh1Y4cGa/ebXEkAi6RibDsvpi+tE/1+82j...65r==',
+                        'SigningCertUrl': 'https://sns.us-east-2.amazonaws.com/SimpleNotificationService-ac565b8b1a6c5d002d285f9598aa1d9b.pem',
+                        'MessageId': '95df01b4-ee98-5cb9-9903-4c221d41eb5e',
+                        'Message': expected_message,
+                        'MessageAttributes': {
+                            'Test': {
+                                'Type': 'String',
+                                'Value': 'TestString'
+                            },
+                            'TestBinary': {
+                                'Type': 'Binary',
+                                'Value': 'TestBinary'
+                            }
+                        },
+                        'Type': 'Notification',
+                        'UnsubscribeUrl': 'https://sns.us-east-2.amazonaws.com/?Action=Unsubscribe&amp;SubscriptionArn=arn:aws:sns:us-east-2:123456789012:test-lambda:21be56ed-a058-49f5-8c98-aedd2564c486',
+                        'TopicArn': 'arn:aws:sns:us-east-2:123456789012:sns-lambda',
+                        'Subject': expected_subject
+                    }
+                }
+            ]
+        }
+
+        mock_get_subject_and_message.return_value = (expected_subject, expected_message)
+
+        # Act
+        lambda_function.lambda_handler(expected_event, expected_context)
+
+        # Assert
+        mock_log_event.assert_called_once_with(expected_event)
+        mock_error_if_not_exactly_one_record.assert_called_once_with(expected_event)
+        mock_get_subject_and_message.assert_called_once_with(expected_event)
+        mock_post_unrecognized_to_sns_and_warn.assert_called_once_with(expected_message, expected_event)
+        mock_post_stdf_string_to_sns.assert_not_called()
+        mock_parse_metric_to_stdf.assert_not_called()
+
+    @unittest.mock.patch('lambda_converter.lambda_function.log_event')
+    @unittest.mock.patch('lambda_converter.lambda_function.error_if_not_exactly_one_record')
+    @unittest.mock.patch('lambda_converter.lambda_function.get_subject_and_message')
+    @unittest.mock.patch('lambda_converter.lambda_function.post_stdf_string_to_sns')
+    @unittest.mock.patch('lambda_converter.lambda_function.post_unrecognized_to_sns_and_warn')
+    @unittest.mock.patch('lambda_converter.lambda_function.parse_metric_to_stdf')
+    def test_handle_incoming_unrecognized_None_subject(self, mock_parse_metric_to_stdf, mock_post_unrecognized_to_sns_and_warn, mock_post_stdf_string_to_sns,
+                                          mock_get_subject_and_message, mock_error_if_not_exactly_one_record, mock_log_event):
+        # Arrange
+        expected_message = '{"a": "b"}'
+        expected_subject = None
+
+        expected_context = {}
+
+        expected_event = {
+            'Records': [
+                {
+                    'EventVersion': '1.0',
+                    'EventSubscriptionArn': 'arn:aws:sns:us-east-2:123456789012:sns-lambda:21be56ed-a058-49f5-8c98-aedd2564c486',
+                    'EventSource': 'aws:sns',
+                    'Sns': {
+                        'SignatureVersion': '1',
+                        'Timestamp': '2019-01-02T12:45:07.000Z',
+                        'Signature': 'tcc6faL2yUC6dgZdmrwh1Y4cGa/ebXEkAi6RibDsvpi+tE/1+82j...65r==',
+                        'SigningCertUrl': 'https://sns.us-east-2.amazonaws.com/SimpleNotificationService-ac565b8b1a6c5d002d285f9598aa1d9b.pem',
+                        'MessageId': '95df01b4-ee98-5cb9-9903-4c221d41eb5e',
+                        'Message': expected_message,
+                        'MessageAttributes': {
+                            'Test': {
+                                'Type': 'String',
+                                'Value': 'TestString'
+                            },
+                            'TestBinary': {
+                                'Type': 'Binary',
+                                'Value': 'TestBinary'
+                            }
+                        },
+                        'Type': 'Notification',
+                        'UnsubscribeUrl': 'https://sns.us-east-2.amazonaws.com/?Action=Unsubscribe&amp;SubscriptionArn=arn:aws:sns:us-east-2:123456789012:test-lambda:21be56ed-a058-49f5-8c98-aedd2564c486',
+                        'TopicArn': 'arn:aws:sns:us-east-2:123456789012:sns-lambda',
+                        'Subject': expected_subject
+                    }
+                }
+            ]
+        }
+
+        mock_get_subject_and_message.return_value = (expected_subject, expected_message)
+
+        # Act
+        lambda_function.lambda_handler(expected_event, expected_context)
+
+        # Assert
+        mock_log_event.assert_called_once_with(expected_event)
+        mock_error_if_not_exactly_one_record.assert_called_once_with(expected_event)
+        mock_get_subject_and_message.assert_called_once_with(expected_event)
+        mock_post_unrecognized_to_sns_and_warn.assert_called_once_with(expected_message, expected_event)
+        mock_post_stdf_string_to_sns.assert_not_called()
+        mock_parse_metric_to_stdf.assert_not_called()
+
+    @unittest.mock.patch('lambda_converter.lambda_function.log_event')
+    @unittest.mock.patch('lambda_converter.lambda_function.error_if_not_exactly_one_record')
+    @unittest.mock.patch('lambda_converter.lambda_function.get_subject_and_message')
+    @unittest.mock.patch('lambda_converter.lambda_function.post_stdf_string_to_sns')
+    @unittest.mock.patch('lambda_converter.lambda_function.post_unrecognized_to_sns_and_warn')
+    @unittest.mock.patch('lambda_converter.lambda_function.parse_metric_to_stdf')
+    def test_handle_incoming_unrecognized_non_json_message(self, mock_parse_metric_to_stdf, mock_post_unrecognized_to_sns_and_warn, mock_post_stdf_string_to_sns,
+                                          mock_get_subject_and_message, mock_error_if_not_exactly_one_record, mock_log_event):
+        # Arrange
+        expected_message = 'not json'
+        expected_subject = None
 
         expected_context = {}
 

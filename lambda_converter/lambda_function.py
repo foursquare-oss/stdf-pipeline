@@ -79,10 +79,13 @@ def lambda_handler(event, context):
     error_if_not_exactly_one_record(event)
     subject, message = get_subject_and_message(event)
 
-    if subject == 'stdfMessage':
-        post_stdf_string_to_sns(message)
-    elif subject.startswith('ALARM: '):
-        stdf_message = parse_metric_to_stdf(message)
-        post_stdf_string_to_sns(stdf_message)
-    else:
+    try: 
+        if subject == 'stdfMessage' or json.loads(message).get('message_type') == 'stdfMessage':
+            post_stdf_string_to_sns(message)
+        elif subject is not None and subject.startswith('ALARM: '):
+            stdf_message = parse_metric_to_stdf(message)
+            post_stdf_string_to_sns(stdf_message)
+        else:
+            post_unrecognized_to_sns_and_warn(message, event)
+    except json.JSONDecodeError:
         post_unrecognized_to_sns_and_warn(message, event)
