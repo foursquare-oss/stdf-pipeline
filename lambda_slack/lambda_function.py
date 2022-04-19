@@ -48,7 +48,8 @@ def format_stdf(stdf_message):
     provider = stdf_parsed['meta']['source']['provider']
     service_name = stdf_parsed['meta']['source']['service']
     account_id = stdf_parsed['meta']['source']['account_id']
-    zulu_timestamp = get_zulu_timestamp(stdf_parsed['meta']['timestamp'])
+    timestamp = stdf_parsed['meta']['timestamp']
+    zulu_timestamp = timestamp if isinstance(timestamp, str) else get_zulu_timestamp(timestamp)
 
     divider = {'type': 'divider'}
     header_section = {

@@ -443,6 +443,137 @@ class TestFormatStdf(unittest.TestCase):
         mock_format_urls.assert_called_once_with(expected_urls)
         mock_get_zulu_timestamp.assert_called_once_with(expected_timestamp_milliseconds)
 
+    @unittest.mock.patch('lambda_slack.lambda_function.format_urls')
+    def test_format_stdf_timestamp_string(self, mock_format_urls):
+        # Arrange
+        expected_event_id = '000000000000000000000000000000000000000000000'
+        expected_provider = 'AWS'
+        expected_service_name = 'CloudWatch'
+        expected_region = 'us-east-1'
+        expected_account_id = '123456789012'
+        expected_timestamp = '2018-08-30T21:42:18Z'
+        expected_log_line = '2020-03-26 08:36:27.000000000  0900 http_logs: {\'host\':\'10.112.250.161\',\'user\':null,\'method\':\'POST\',\'path\':\'/saml/SSO\',\'code\':302,\'size\':null,\'referer\':null,\'agent\':null}'
+
+        expected_description = 'Something happened. A lot of things actually so this text is really long. This is a very detailed description innit.'
+        expected_app_name = 'Jamf'
+        expected_alert_title = 'BambooHR sync failed'
+
+        expected_url_1 = {
+            'url': 'http://example.com',
+            'text': 'click this'
+        }
+        expected_url_2 = {
+            'url': 'http://that.com',
+            'text': 'click that'
+        }
+
+        expected_links = f"<{expected_url_1['url']}|{expected_url_1['text']}> - <{expected_url_2['url']}|{expected_url_2['text']}>"
+        mock_format_urls.return_value = expected_links
+
+        expected_formatted_message = {
+            'blocks': [
+                {
+                    'type': 'section',
+                    'text': {
+                        'type': 'mrkdwn',
+                        'text': f'*{expected_app_name}*: *{expected_alert_title}*'
+                    }
+                },
+                {
+                    'type': 'section',
+                    'text': {
+                        'type': 'mrkdwn',
+                        'text': expected_description
+                    }
+                },
+                {
+                    'type': 'section',
+                    'text': {
+                        'type': 'mrkdwn',
+                        'text': f'```{expected_log_line}```'
+                    }
+                },
+                {
+                    'type': 'divider'
+                },
+                {
+                    'type': 'section',
+                    'fields': [
+                        {
+                            'type': 'mrkdwn',
+                            'text': f'*Source:* {expected_provider} {expected_service_name}'
+                        },
+                        {
+                            'type': 'mrkdwn',
+                            'text': f'*Account id:* {expected_account_id}'
+                        },
+                        {
+                            'type': 'mrkdwn',
+                            'text': f'*Timestamp*: {expected_timestamp}'
+                        },
+                        {
+                            'type': 'mrkdwn',
+                            'text': '*Region:* us-east-1'
+                        }
+                    ]
+                },
+                {
+                    'type': 'divider'
+                },
+                {
+                    'type': 'section',
+                    'text': {
+                        'type': 'mrkdwn',
+                        'text': expected_links
+                    }
+                },
+                {
+                    'type': 'context',
+                    'elements': [
+                        {
+                            'type': 'mrkdwn',
+                            'text': f'*Event id*: {expected_event_id}'
+                        }
+                    ]
+                }
+            ]
+        }
+
+        expected_urls = [
+            expected_url_1,
+            expected_url_2
+        ]
+
+        expected_stdf_message = {
+            'payload': {
+                'title': expected_alert_title,
+                'description': expected_description,
+                'raw_data': expected_log_line
+            },
+            'meta': {
+                'timestamp': expected_timestamp,
+                'source': {
+                    'provider': expected_provider,
+                    'account_id': expected_account_id,
+                    'region': expected_region,
+                    'service': expected_service_name,
+                    'event_id': expected_event_id,
+                    'app_name': expected_app_name
+                },
+                'urls': expected_urls
+            },
+            'stdf_version': 2,
+        }
+
+        expected_stdf_message_raw = json.dumps(expected_stdf_message)
+
+        # Act
+        actual_formatted_message = lambda_function.format_stdf(expected_stdf_message_raw)
+
+        # Assert
+        self.assertEqual(actual_formatted_message, expected_formatted_message)
+        mock_format_urls.assert_called_once_with(expected_urls)
+
     @unittest.mock.patch('lambda_slack.lambda_function.get_zulu_timestamp')
     @unittest.mock.patch('lambda_slack.lambda_function.format_urls')
     def test_format_stdf_no_urls_provided(self, mock_format_urls, mock_get_zulu_timestamp):
