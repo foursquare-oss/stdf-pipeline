@@ -6,3 +6,4 @@ Standard alerting pipeline for stdf format
 git tag -a v3.0.4 -m "v3.0.4"
 git push --follow-tags
 ```
+
