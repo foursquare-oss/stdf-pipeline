@@ -89,7 +89,7 @@ resource "aws_lambda_function" "converter_lambda" {
   function_name    = "stdf-alert-pipeline-${var.name}-converter"
   description      = "Converts alerts from various formats into STDF"
   handler          = "lambda_function.lambda_handler"
-  runtime          = "python3.7"
+  runtime          = "python3.11"
   role             = aws_iam_role.converter_lambda.arn
   environment {
     variables = {
@@ -198,7 +198,7 @@ resource "aws_lambda_function" "slack_lambda" {
   function_name    = "stdf-alert-pipeline-${var.name}-slack"
   description      = "Posts STDF alerts to slack"
   handler          = "lambda_function.lambda_handler"
-  runtime          = "python3.7"
+  runtime          = "python3.11"
   role             = aws_iam_role.slack_lambda.arn
   environment {
     variables = {
